@@ -104,8 +104,11 @@ reservation-finder/
 
 ## FAQ
 
-**Why does only Resy return results?**
-OpenTable (Akamai) and Tock/TheFork (Cloudflare) actively block server-side requests and return 403s. The app tries browser-side fetches after the SSE stream closes, but CORS blocks those too. Resy's API is CORS-enabled and works from both server and browser.
+**How does the multi-platform fetching work?**
+The app uses a hybrid approach. Resy is fetched server-side (SSE) and simultaneously called directly from the browser. After the SSE stream closes, the browser fires additional requests to OpenTable and Tock — their widget/consumer APIs have CORS headers enabled for third-party embedding, so they work from a browser context even though they block server-side Node.js requests (Akamai/Cloudflare). SevenRooms and TheFork are attempted server-side but currently return 403/404 for most cities and show "blocked" in the status bar.
+
+**Why do SevenRooms and TheFork show "blocked"?**
+Both services block server-side scraping via Akamai/Cloudflare. Their APIs don't have CORS headers enabled for browser-side fetching either, so they can't be called from a browser without hitting CORS errors. The status indicator will say "blocked" for these platforms.
 
 **Why is the city autocomplete required before searching?**
 Geocoding is done via Nominatim (OpenStreetMap). You must confirm the dropdown selection so the app gets exact lat/lng coordinates — this prevents ambiguity (e.g. "Vancouver BC" vs "Vancouver WA") and enables proximity filtering.
