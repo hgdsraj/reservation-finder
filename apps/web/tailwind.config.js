@@ -1,29 +1,39 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{js,jsx}'],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
+        // Warm espresso scale for dark mode (replaces cold navy)
         navy: {
-          900: '#050B18',
-          800: '#0A1628',
-          700: '#0D1F3C',
-          600: '#122647',
-          500: '#1A3255',
+          900: '#1C1409',
+          800: '#231810',
+          700: '#2D200F',
+          600: '#3A2815',
+          500: '#4A351C',
         },
         card: {
-          bg: '#0D1626',
-          border: '#1E2D45',
-          hover: '#152035',
+          bg:    '#261A0D',
+          border:'#3D2C18',
+          hover: '#2F2210',
+        },
+        // Warm cream scale for light mode accents
+        cream: {
+          50:  '#FFFDF9',
+          100: '#FBF8F4',
+          200: '#F7F3EC',
+          300: '#EEE5D8',
+          400: '#E0D4C0',
         },
       },
       fontFamily: {
-        sans: ['"Inter"', 'system-ui', 'sans-serif'],
+        sans:    ['"Inter"', 'system-ui', 'sans-serif'],
         display: ['"Playfair Display"', 'Georgia', 'serif'],
       },
       backgroundImage: {
-        'hero-gradient': 'linear-gradient(135deg, #050B18 0%, #0A1628 40%, #0D1F3C 100%)',
-        'card-gradient': 'linear-gradient(180deg, transparent 40%, rgba(5,11,24,0.95) 100%)',
+        'hero-gradient': 'linear-gradient(160deg, #1C1409 0%, #231810 45%, #2D200F 100%)',
+        'card-gradient': 'linear-gradient(180deg, transparent 35%, rgba(26,14,6,0.97) 100%)',
       },
     },
   },

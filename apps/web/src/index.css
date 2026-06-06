@@ -10,71 +10,141 @@
   }
 
   body {
-    background-color: #050B18;
-    color: #F8FAFC;
+    background-color: #1C1409;
+    color: #F5EDE0;
     font-family: 'Inter', system-ui, sans-serif;
     min-height: 100vh;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  ::-webkit-scrollbar-track { background: #0A1628; }
-  ::-webkit-scrollbar-thumb { background: #1E2D45; border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: #2A3D5A; }
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: #231810; }
+  ::-webkit-scrollbar-thumb { background: #3D2C18; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #4A3520; }
 }
 
 @layer utilities {
   .shimmer {
-    background: linear-gradient(90deg, #0D1626 25%, #152035 50%, #0D1626 75%);
+    background: linear-gradient(90deg, #261A0D 25%, #2F2210 50%, #261A0D 75%);
     background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
+    animation: shimmer 1.6s ease-in-out infinite;
   }
 
+  /* Softer glass — less "frosted tech panel", more warm translucency */
   .glass {
-    background: rgba(13, 22, 38, 0.8);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: rgba(28, 20, 9, 0.82);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: background 0.3s ease;
   }
 
   .text-gradient {
-    background: linear-gradient(135deg, #F59E0B, #FBBF24);
+    background: linear-gradient(135deg, #E8924A 10%, #F5C842 90%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   .card-hover {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
   }
   .card-hover:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+    transform: translateY(-3px);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55);
   }
 
   .slot-btn {
     @apply px-3 py-1 rounded-full text-xs font-semibold transition-all duration-150
-           bg-amber-500/15 text-amber-400 border border-amber-500/30
-           hover:bg-amber-500 hover:text-navy-900 hover:border-amber-500 cursor-pointer;
+           bg-amber-600/20 text-amber-400 border border-amber-600/30
+           hover:bg-amber-500 hover:text-[#1C1409] hover:border-amber-500 cursor-pointer;
   }
 
   .no-slots {
     @apply px-3 py-1 rounded-full text-xs font-medium
-           bg-slate-800/50 text-slate-500 border border-slate-700/50;
+           bg-[#2D200F]/80 text-[#7A6A55] border border-[#3D2C18]/60;
   }
 }
 
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
 }
 
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(16px); }
+  from { opacity: 0; transform: translateY(14px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
 .fade-up {
   animation: fadeUp 0.4s ease-out forwards;
 }
+
+/* ─── Light / Warm Cream Theme ──────────────────────────────────────────────── */
+/* Active when html does NOT have the `dark` class */
+
+html:not(.dark) body {
+  background-color: #FBF8F4;
+  color: #1A1208;
+}
+
+html:not(.dark) ::-webkit-scrollbar-track { background: #F7F3EC; }
+html:not(.dark) ::-webkit-scrollbar-thumb { background: #E0D4C0; }
+html:not(.dark) ::-webkit-scrollbar-thumb:hover { background: #C8BAA4; }
+
+html:not(.dark) .bg-hero-gradient {
+  background: linear-gradient(160deg, #FBF8F4 0%, #F7F3EC 45%, #F0E9DF 100%) !important;
+}
+
+html:not(.dark) .glass {
+  background: rgba(251, 248, 244, 0.9) !important;
+  border-color: rgba(58, 40, 21, 0.1) !important;
+  box-shadow: 0 1px 0 rgba(58, 40, 21, 0.08);
+}
+
+html:not(.dark) .shimmer {
+  background: linear-gradient(90deg, #F7F3EC 25%, #EEE5D8 50%, #F7F3EC 75%) !important;
+  background-size: 200% 100% !important;
+}
+
+html:not(.dark) .bg-card-gradient {
+  background: linear-gradient(180deg, transparent 35%, rgba(255, 253, 249, 0.97) 100%) !important;
+}
+
+/* Warm-tinted navy → warm cream scale */
+html:not(.dark) .bg-navy-900 { background-color: #FBF8F4 !important; }
+html:not(.dark) .bg-navy-800 { background-color: #F7F3EC !important; }
+html:not(.dark) .bg-navy-700 { background-color: #EEE5D8 !important; }
+html:not(.dark) .bg-navy-600 { background-color: #E4D9C8 !important; }
+html:not(.dark) .bg-navy-500 { background-color: #D8CAAF !important; }
+
+html:not(.dark) .bg-card-bg    { background-color: #FFFCF7 !important; }
+html:not(.dark) .border-card-border { border-color: #E8DDD0 !important; }
+html:not(.dark) .border-navy-700    { border-color: #E8DDD0 !important; }
+html:not(.dark) .border-navy-600    { border-color: #DDD0BC !important; }
+html:not(.dark) .border-navy-700\/50 { border-color: rgba(232, 221, 208, 0.6) !important; }
+
+html:not(.dark) .card-hover:hover { box-shadow: 0 12px 36px rgba(58, 40, 21, 0.12) !important; }
+
+/* Text */
+html:not(.dark) .text-white    { color: #1A1208 !important; }
+html:not(.dark) .text-slate-300 { color: #3D2D1C !important; }
+html:not(.dark) .text-slate-400 { color: #5C4D3C !important; }
+html:not(.dark) .text-slate-500 { color: #7A6A55 !important; }
+html:not(.dark) .text-slate-600 { color: #A09080 !important; }
+html:not(.dark) .text-slate-700 { color: #C8BAA4 !important; }
+
+html:not(.dark) .no-slots {
+  background-color: #F0EAE0 !important;
+  color: #9C8A76 !important;
+  border-color: #E0D4C0 !important;
+}
+
+html:not(.dark) input[type="date"] { color-scheme: light !important; }
+
+/* Price badge on image stays readable */
+html:not(.dark) .bg-navy-900\/80 {
+  background-color: rgba(255, 252, 247, 0.9) !important;
+}
+
+/* Leaflet map popup text (always has white bg natively) */
+html:not(.dark) .leaflet-popup-content-wrapper { box-shadow: 0 4px 16px rgba(0,0,0,0.15); }

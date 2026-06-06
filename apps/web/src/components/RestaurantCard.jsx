@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
-import { MapPin, Users, ExternalLink, ChevronRight } from 'lucide-react';
+import { MapPin, ExternalLink } from 'lucide-react';
 import { PlatformBadge } from './PlatformBadge.jsx';
 import { StarRating } from './StarRating.jsx';
 import { RestaurantModal } from './RestaurantModal.jsx';
 
 const FALLBACK_PHOTOS = {
-  opentable: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&q=80',
-  resy:       'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=80',
-  tock:       'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&q=80',
+  opentable: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=700&q=80',
+  resy:       'https://images.unsplash.com/photo-1428515613728-6b4607e44363?w=700&q=80',
+  tock:       'https://images.unsplash.com/photo-1551218808-94e220e084d2?w=700&q=80',
+  sevenrooms: 'https://images.unsplash.com/photo-1559339352-11d035aa65de?w=700&q=80',
+  thefork:    'https://images.unsplash.com/photo-1544148103-0773bf10d330?w=700&q=80',
 };
 
 export function RestaurantCard({ restaurant, searchParams, animDelay = 0 }) {
@@ -16,7 +18,7 @@ export function RestaurantCard({ restaurant, searchParams, animDelay = 0 }) {
 
   const photo = !imgError && restaurant.photos?.[0]
     ? restaurant.photos[0]
-    : FALLBACK_PHOTOS[restaurant.platform] || FALLBACK_PHOTOS.opentable;
+    : FALLBACK_PHOTOS[restaurant.platform] || FALLBACK_PHOTOS.resy;
 
   const visibleSlots = restaurant.slots?.slice(0, 5) || [];
   const hasSlots = visibleSlots.length > 0;
@@ -29,7 +31,7 @@ export function RestaurantCard({ restaurant, searchParams, animDelay = 0 }) {
         onClick={() => setOpen(true)}
       >
         {/* Image */}
-        <div className="relative h-52 overflow-hidden bg-navy-700">
+        <div className="relative h-48 overflow-hidden bg-navy-700">
           <img
             src={photo}
             alt={restaurant.name}
@@ -38,42 +40,44 @@ export function RestaurantCard({ restaurant, searchParams, animDelay = 0 }) {
             loading="lazy"
           />
           <div className="absolute inset-0 bg-card-gradient" />
+
           <div className="absolute top-3 left-3">
             <PlatformBadge platform={restaurant.platform} />
           </div>
-          {restaurant.price && (
-            <div className="absolute top-3 right-3 bg-navy-900/80 backdrop-blur-sm text-amber-400 text-xs font-bold px-2 py-1 rounded-lg border border-amber-500/20">
-              {restaurant.price}
-            </div>
-          )}
-          {/* Available badge */}
+
+          <div className="absolute top-3 right-3 flex items-center gap-1.5">
+            {restaurant.price && (
+              <span className="bg-black/50 backdrop-blur-sm text-amber-400 text-xs font-bold px-2 py-0.5 rounded-lg">
+                {restaurant.price}
+              </span>
+            )}
+          </div>
+
           {hasSlots && (
-            <div className="absolute bottom-3 right-3 bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full">
+            <div className="absolute bottom-3 right-3 bg-emerald-500/25 border border-emerald-500/50 text-emerald-400 text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full backdrop-blur-sm">
               Available
             </div>
           )}
         </div>
 
         {/* Content */}
-        <div className="p-4 space-y-2.5">
-          <div className="flex items-start justify-between gap-2">
-            <h3 className="font-display text-lg font-semibold text-white leading-tight line-clamp-2 group-hover:text-amber-400 transition-colors">
+        <div className="p-4 space-y-2">
+          <div>
+            <h3 className="font-display text-base font-semibold text-white leading-snug line-clamp-1 group-hover:text-amber-400 transition-colors">
               {restaurant.name}
             </h3>
-            <ChevronRight size={16} className="text-slate-600 group-hover:text-amber-400 transition-colors flex-shrink-0 mt-1" />
-          </div>
-
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-400">
-            <span className="text-slate-300">{restaurant.cuisine}</span>
-            {restaurant.neighborhood && (
-              <>
-                <span className="text-slate-700">·</span>
-                <span className="flex items-center gap-1">
-                  <MapPin size={11} className="text-slate-600" />
-                  {restaurant.neighborhood}
-                </span>
-              </>
-            )}
+            <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-500">
+              <span>{restaurant.cuisine}</span>
+              {restaurant.neighborhood && (
+                <>
+                  <span>·</span>
+                  <span className="flex items-center gap-0.5">
+                    <MapPin size={10} className="flex-shrink-0" />
+                    {restaurant.neighborhood}
+                  </span>
+                </>
+              )}
+            </div>
           </div>
 
           <StarRating rating={restaurant.rating} reviewCount={restaurant.reviewCount} />
@@ -83,7 +87,7 @@ export function RestaurantCard({ restaurant, searchParams, animDelay = 0 }) {
           )}
 
           {/* Time slots */}
-          <div className="pt-1" onClick={(e) => e.stopPropagation()}>
+          <div className="pt-0.5" onClick={(e) => e.stopPropagation()}>
             {hasSlots ? (
               <div className="flex flex-wrap gap-1.5">
                 {visibleSlots.map((slot, i) => (
@@ -98,10 +102,7 @@ export function RestaurantCard({ restaurant, searchParams, animDelay = 0 }) {
                   </a>
                 ))}
                 {restaurant.slots.length > 5 && (
-                  <button
-                    className="slot-btn"
-                    onClick={(e) => { e.stopPropagation(); setOpen(true); }}
-                  >
+                  <button className="slot-btn" onClick={(e) => { e.stopPropagation(); setOpen(true); }}>
                     +{restaurant.slots.length - 5} more
                   </button>
                 )}
@@ -125,11 +126,7 @@ export function RestaurantCard({ restaurant, searchParams, animDelay = 0 }) {
       </article>
 
       {open && (
-        <RestaurantModal
-          restaurant={restaurant}
-          searchParams={searchParams}
-          onClose={() => setOpen(false)}
-        />
+        <RestaurantModal restaurant={restaurant} searchParams={searchParams} onClose={() => setOpen(false)} />
       )}
     </>
   );
@@ -138,7 +135,5 @@ export function RestaurantCard({ restaurant, searchParams, animDelay = 0 }) {
 function formatTime(t) {
   if (!t) return '';
   const [h, m] = t.split(':').map(Number);
-  const period = h >= 12 ? 'PM' : 'AM';
-  const hour = h % 12 || 12;
-  return `${hour}:${String(m).padStart(2, '0')} ${period}`;
+  return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
 }

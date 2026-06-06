@@ -8,12 +8,12 @@ const sevenrooms = require('../scrapers/sevenrooms');
 const thefork = require('../scrapers/thefork');
 const { enrichWithYelp } = require('../enrichers/yelp');
 
-const PLATFORMS = [
-  { name: 'opentable',   fn: (a) => opentable.searchRestaurants(a) },
-  { name: 'resy',        fn: (a) => resy.searchRestaurants(a) },
-  { name: 'tock',        fn: (a) => tock.searchRestaurants(a) },
-  { name: 'sevenrooms',  fn: (a) => sevenrooms.searchRestaurants(a) },
-  { name: 'thefork',     fn: (a) => thefork.searchRestaurants(a) },
+// OpenTable and Tock are called from the browser (bypasses Akamai/Cloudflare).
+// SevenRooms and TheFork are attempted server-side but may return empty.
+const SERVER_PLATFORMS = [
+  { name: 'resy',       fn: (a) => resy.searchRestaurants(a) },
+  { name: 'sevenrooms', fn: (a) => sevenrooms.searchRestaurants(a) },
+  { name: 'thefork',   fn: (a) => thefork.searchRestaurants(a) },
 ];
 
 function sseWrite(res, event, data) {
@@ -21,13 +21,20 @@ function sseWrite(res, event, data) {
 }
 
 function parseSearchQuery(query) {
-  const { city, date, partySize = '2', time = '19:00' } = query;
-  return { city, date, partySize: Math.max(1, Math.min(20, parseInt(partySize) || 2)), time };
+  const { city, date, partySize = '2', time = '19:00', lat, lng } = query;
+  return {
+    city,
+    date,
+    partySize: Math.max(1, Math.min(20, parseInt(partySize) || 2)),
+    time,
+    lat: lat ? parseFloat(lat) : null,
+    lng: lng ? parseFloat(lng) : null,
+  };
 }
 
-// SSE streaming — results arrive progressively per platform
+// SSE streaming — browser connects here, results arrive platform by platform
 router.get('/stream', async (req, res) => {
-  const { city, date, partySize, time } = parseSearchQuery(req.query);
+  const { city, date, partySize, time, lat, lng } = parseSearchQuery(req.query);
 
   if (!city || !date) {
     return res.status(400).json({ error: 'city and date are required' });
@@ -39,25 +46,31 @@ router.get('/stream', async (req, res) => {
   res.setHeader('X-Accel-Buffering', 'no');
   res.flushHeaders();
 
-  let cityData = null;
-  try {
-    sseWrite(res, 'status', { message: 'Resolving location...', phase: 'geocode' });
-    cityData = await resolveCity(city);
-    if (!cityData) {
-      sseWrite(res, 'error', { message: `Could not resolve location: "${city}"` });
-      return res.end();
+  let cityData;
+  // Accept pre-geocoded coords from frontend (avoids double Nominatim call)
+  if (lat && lng) {
+    cityData = { lat, lng, label: city, city: city.split(',')[0].trim(), country: 'US' };
+    sseWrite(res, 'status', { message: `Scanning ${city}...`, phase: 'search', cityData });
+  } else {
+    try {
+      sseWrite(res, 'status', { message: 'Resolving location...', phase: 'geocode' });
+      cityData = await resolveCity(city);
+      if (!cityData) {
+        sseWrite(res, 'error', { message: `Could not resolve "${city}" — try a different city name.` });
+        return res.end();
+      }
+      sseWrite(res, 'status', { message: `Scanning ${cityData.label}...`, phase: 'search', cityData });
+    } catch {
+      cityData = { lat: null, lng: null, label: city, city };
+      sseWrite(res, 'status', { message: `Searching ${city}...`, phase: 'search', cityData });
     }
-    sseWrite(res, 'status', { message: `Scanning restaurants in ${cityData.label}...`, phase: 'search', cityData });
-  } catch (err) {
-    sseWrite(res, 'status', { message: 'Geocoding failed, searching by name...', phase: 'search' });
-    cityData = { lat: null, lng: null, label: city, city };
   }
 
   const args = { city, cityData, date, partySize, time };
   let allRestaurants = [];
 
   await Promise.allSettled(
-    PLATFORMS.map(async ({ name, fn }) => {
+    SERVER_PLATFORMS.map(async ({ name, fn }) => {
       sseWrite(res, 'status', { message: `Scanning ${name}...`, phase: name });
       try {
         const results = await fn(args);
@@ -70,7 +83,6 @@ router.get('/stream', async (req, res) => {
   );
 
   if (process.env.YELP_API_KEY && allRestaurants.length) {
-    sseWrite(res, 'status', { message: 'Enriching with Yelp ratings & photos...', phase: 'yelp' });
     try {
       allRestaurants = await enrichWithYelp(allRestaurants, cityData);
       sseWrite(res, 'enriched', { restaurants: allRestaurants });
@@ -83,18 +95,20 @@ router.get('/stream', async (req, res) => {
 
 // REST fallback (no streaming)
 router.get('/', async (req, res) => {
-  const { city, date, partySize, time } = parseSearchQuery(req.query);
+  const { city, date, partySize, time, lat, lng } = parseSearchQuery(req.query);
   if (!city || !date) return res.status(400).json({ error: 'city and date are required' });
 
   try {
-    const cityData = await resolveCity(city).catch(() => null);
+    let cityData = null;
+    if (lat && lng) {
+      cityData = { lat, lng, label: city, city: city.split(',')[0].trim() };
+    } else {
+      cityData = await resolveCity(city).catch(() => null);
+    }
+
     const args = { city, cityData, date, partySize, time };
-
-    const settled = await Promise.allSettled(PLATFORMS.map(({ fn }) => fn(args)));
-    const restaurants = settled
-      .filter((r) => r.status === 'fulfilled')
-      .flatMap((r) => r.value);
-
+    const settled = await Promise.allSettled(SERVER_PLATFORMS.map(({ fn }) => fn(args)));
+    const restaurants = settled.filter((r) => r.status === 'fulfilled').flatMap((r) => r.value);
     res.json({ restaurants, total: restaurants.length, cityData });
   } catch (err) {
     res.status(500).json({ error: err.message });

@@ -14,7 +14,7 @@ global.EventSource = MockEventSource;
 describe('App — landing page', () => {
   test('renders headline', () => {
     render(<App />);
-    expect(screen.getByText(/Find your next/i)).toBeInTheDocument();
+    expect(screen.getByText(/Your table is/i)).toBeInTheDocument();
   });
 
   test('renders platform badges in header', () => {
@@ -28,24 +28,22 @@ describe('App — landing page', () => {
 
   test('renders feature cards', () => {
     render(<App />);
-    expect(screen.getByText('Any city in the world')).toBeInTheDocument();
-    expect(screen.getByText('Real-time streaming')).toBeInTheDocument();
-    expect(screen.getByText('Book in one click')).toBeInTheDocument();
+    expect(screen.getByText('Any city')).toBeInTheDocument();
+    expect(screen.getByText('Arrives live')).toBeInTheDocument();
+    expect(screen.getByText('Book direct')).toBeInTheDocument();
   });
 
   test('renders search form', () => {
     render(<App />);
-    expect(screen.getByPlaceholderText(/city or neighborhood/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/city, neighborhood/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /find tables/i })).toBeInTheDocument();
   });
 });
 
 describe('App — search interaction', () => {
-  test('search button is disabled while loading', async () => {
+  test('search button is disabled until a place is selected', async () => {
     render(<App />);
-    const cityInput = screen.getByPlaceholderText(/city or neighborhood/i);
-    await userEvent.type(cityInput, 'New York');
     const btn = screen.getByRole('button', { name: /find tables/i });
-    expect(btn).not.toBeDisabled();
+    expect(btn).toBeDisabled();
   });
 });
