@@ -15,13 +15,27 @@ const FALLBACK_PHOTOS = {
 export function RestaurantCard({ restaurant, searchParams, animDelay = 0 }) {
   const [imgError, setImgError] = useState(false);
   const [open, setOpen] = useState(false);
+  const [activePlatform, setActivePlatform] = useState(null); // null = primary
 
-  const photo = !imgError && restaurant.photos?.[0]
-    ? restaurant.photos[0]
+  const alternatives = restaurant.alternatives || [];
+
+  // Which platform's data to show (primary or a selected alternative)
+  const activeAlt = activePlatform ? alternatives.find((a) => a.platform === activePlatform) : null;
+  const displaySlots = activeAlt ? activeAlt.slots : restaurant.slots;
+  const displayBookingUrl = activeAlt ? activeAlt.bookingUrl : restaurant.bookingUrl;
+  const displayPhotos = activeAlt?.photos?.length ? activeAlt.photos : restaurant.photos;
+
+  const photo = !imgError && displayPhotos?.[0]
+    ? displayPhotos[0]
     : FALLBACK_PHOTOS[restaurant.platform] || FALLBACK_PHOTOS.resy;
 
-  const visibleSlots = restaurant.slots?.slice(0, 5) || [];
+  const visibleSlots = displaySlots?.slice(0, 5) || [];
   const hasSlots = visibleSlots.length > 0;
+
+  const allPlatforms = [
+    { platform: restaurant.platform, bookingUrl: restaurant.bookingUrl, slots: restaurant.slots, primary: true },
+    ...alternatives,
+  ];
 
   return (
     <>
@@ -41,13 +55,40 @@ export function RestaurantCard({ restaurant, searchParams, animDelay = 0 }) {
           />
           <div className="absolute inset-0 bg-card-gradient" />
 
-          <div className="absolute top-3 left-3">
-            <PlatformBadge platform={restaurant.platform} />
-          </div>
+          {/* Multi-platform tabs — shown when alternatives exist */}
+          {allPlatforms.length > 1 ? (
+            <div
+              className="absolute top-2.5 left-2.5 flex items-center gap-1"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {allPlatforms.map(({ platform, primary }) => (
+                <button
+                  key={platform}
+                  title={`Book on ${platform}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActivePlatform(primary && activePlatform === null ? null : platform === restaurant.platform ? null : platform);
+                  }}
+                  className={[
+                    'transition-all ring-1 rounded-md overflow-hidden',
+                    (primary && activePlatform === null) || activePlatform === platform
+                      ? 'ring-peri-400 opacity-100 scale-105'
+                      : 'ring-transparent opacity-60 hover:opacity-90',
+                  ].join(' ')}
+                >
+                  <PlatformBadge platform={platform} />
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="absolute top-3 left-3">
+              <PlatformBadge platform={restaurant.platform} />
+            </div>
+          )}
 
           <div className="absolute top-3 right-3 flex items-center gap-1.5">
             {restaurant.price && (
-              <span className="bg-black/50 backdrop-blur-sm text-amber-400 text-xs font-bold px-2 py-0.5 rounded-lg">
+              <span className="bg-black/50 backdrop-blur-sm text-peri-300 text-xs font-bold px-2 py-0.5 rounded-lg">
                 {restaurant.price}
               </span>
             )}
@@ -63,7 +104,7 @@ export function RestaurantCard({ restaurant, searchParams, animDelay = 0 }) {
         {/* Content */}
         <div className="p-4 space-y-2">
           <div>
-            <h3 className="font-display text-base font-semibold text-white leading-snug line-clamp-1 group-hover:text-amber-400 transition-colors">
+            <h3 className="font-display text-base font-semibold text-white leading-snug line-clamp-1 group-hover:text-peri-300 transition-colors">
               {restaurant.name}
             </h3>
             <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-500">
@@ -101,9 +142,9 @@ export function RestaurantCard({ restaurant, searchParams, animDelay = 0 }) {
                     {formatTime(slot.time)}
                   </a>
                 ))}
-                {restaurant.slots.length > 5 && (
+                {(displaySlots?.length || 0) > 5 && (
                   <button className="slot-btn" onClick={(e) => { e.stopPropagation(); setOpen(true); }}>
-                    +{restaurant.slots.length - 5} more
+                    +{displaySlots.length - 5} more
                   </button>
                 )}
               </div>
@@ -111,14 +152,34 @@ export function RestaurantCard({ restaurant, searchParams, animDelay = 0 }) {
               <div className="flex items-center gap-2">
                 <span className="no-slots">No times shown</span>
                 <a
-                  href={restaurant.bookingUrl}
+                  href={displayBookingUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-amber-400 transition-colors"
+                  className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-peri-300 transition-colors"
                   onClick={(e) => e.stopPropagation()}
                 >
                   Check site <ExternalLink size={10} />
                 </a>
+              </div>
+            )}
+
+            {/* "Also on" links when alternatives exist */}
+            {alternatives.length > 0 && activePlatform === null && (
+              <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                <span className="text-[10px] text-slate-600">Also on:</span>
+                {alternatives.map((alt) => (
+                  <a
+                    key={alt.platform}
+                    href={alt.bookingUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={`Book on ${alt.platform}`}
+                    className="opacity-60 hover:opacity-100 transition-opacity"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <PlatformBadge platform={alt.platform} />
+                  </a>
+                ))}
               </div>
             )}
           </div>

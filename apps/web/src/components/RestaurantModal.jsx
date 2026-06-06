@@ -57,7 +57,7 @@ export function RestaurantModal({ restaurant: r, searchParams, onClose }) {
             <PlatformBadge platform={r.platform} size="md" />
           </div>
           {r.price && (
-            <div className="absolute bottom-4 right-4 bg-navy-900/80 text-amber-400 text-sm font-bold px-3 py-1 rounded-lg border border-amber-500/20">
+            <div className="absolute bottom-4 right-4 bg-navy-900/80 text-peri-300 text-sm font-bold px-3 py-1 rounded-lg border border-peri-500/20">
               {r.price}
             </div>
           )}
@@ -134,11 +134,30 @@ export function RestaurantModal({ restaurant: r, searchParams, onClose }) {
             href={r.bookingUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-navy-900 font-semibold transition-colors"
+            className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-peri-500 hover:bg-peri-400 text-white font-semibold transition-colors"
           >
             Book on {capitalize(r.platform)}
             <ExternalLink size={15} />
           </a>
+
+          {/* Alternative platforms */}
+          {r.alternatives?.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs text-slate-500">Also available on:</p>
+              {r.alternatives.map((alt) => (
+                <a
+                  key={alt.platform}
+                  href={alt.bookingUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-navy-600 hover:border-peri-400/50 text-slate-400 hover:text-white font-medium text-sm transition-colors"
+                >
+                  Book on {capitalize(alt.platform)}
+                  <ExternalLink size={13} />
+                </a>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useEffect, Suspense, lazy } from 'react';
-import { Utensils, Sun, Moon, List, Map } from 'lucide-react';
+import React, { useState, useMemo, useEffect, useRef, Suspense, lazy } from 'react';
+import { Utensils, Sun, Moon, List, Map, AlertTriangle } from 'lucide-react';
 import { SearchBar } from './components/SearchBar.jsx';
 import { RestaurantCard } from './components/RestaurantCard.jsx';
 import { FilterPanel } from './components/FilterPanel.jsx';
@@ -15,12 +15,13 @@ const ALL_PLATFORMS = ['opentable', 'resy', 'tock', 'sevenrooms', 'thefork'];
 const DEFAULT_FILTERS = { platforms: [], prices: [], minRating: null, sort: 'available' };
 
 export default function App() {
-  const { restaurants, status, loading, platformStatus, errors, cityData, search } = useSearch();
+  const { restaurants, status, loading, platformStatus, errors, cityData, proximityWarning, search, checkProximity } = useSearch();
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [searchParams, setSearchParams] = useState(null);
   const [hasSearched, setHasSearched] = useState(false);
   const [viewMode, setViewMode] = useState('list');
   const [isDark, setIsDark] = useState(true);
+  const proximityChecked = useRef(false);
 
   useEffect(() => {
     const stored = localStorage.getItem('theme');
@@ -28,6 +29,14 @@ export default function App() {
     setIsDark(dark);
     document.documentElement.classList.toggle('dark', dark);
   }, []);
+
+  // Check proximity once loading finishes and we have results + coordinates
+  useEffect(() => {
+    if (!loading && restaurants.length > 0 && cityData && !proximityChecked.current) {
+      proximityChecked.current = true;
+      checkProximity(restaurants, cityData);
+    }
+  }, [loading, restaurants, cityData, checkProximity]);
 
   function toggleTheme() {
     const next = !isDark;
@@ -40,7 +49,13 @@ export default function App() {
     setSearchParams(params);
     setHasSearched(true);
     setFilters(DEFAULT_FILTERS);
+    proximityChecked.current = false;
     search(params);
+  }
+
+  function goHome() {
+    setHasSearched(false);
+    setFilters(DEFAULT_FILTERS);
   }
 
   const filtered = useMemo(() => {
@@ -61,7 +76,6 @@ export default function App() {
     return c;
   }, [restaurants]);
 
-  // Which platforms are still in flight
   const activePlatforms = ALL_PLATFORMS.filter((p) => platformStatus[p] === 'loading');
 
   return (
@@ -69,10 +83,13 @@ export default function App() {
       {/* Header */}
       <header className="border-b border-navy-700/50 glass sticky top-0 z-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <Utensils size={17} className="text-amber-500" />
-            <span className="font-display font-semibold text-white text-lg tracking-tight">TableFind</span>
-          </div>
+          <button
+            onClick={goHome}
+            className="flex items-center gap-2.5 hover:opacity-80 transition-opacity"
+          >
+            <Utensils size={17} className="text-peri-400" />
+            <span className="font-display font-semibold text-white text-lg tracking-tight">TableFinder</span>
+          </button>
 
           <div className="flex items-center gap-3">
             <div className="hidden sm:flex items-center gap-1.5">
@@ -80,8 +97,8 @@ export default function App() {
             </div>
             <button
               onClick={toggleTheme}
-              title={isDark ? 'Light mode' : 'Dark mode'}
-              className="w-8 h-8 rounded-full flex items-center justify-center border border-navy-600 hover:border-amber-500/50 transition-all text-slate-500 hover:text-amber-400"
+              title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+              className="w-8 h-8 rounded-full flex items-center justify-center border border-navy-600 hover:border-peri-400/50 transition-all text-slate-500 hover:text-peri-300"
             >
               {isDark ? <Sun size={14} /> : <Moon size={14} />}
             </button>
@@ -94,7 +111,7 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-14 pb-10">
           {!hasSearched && (
             <div className="text-center mb-10">
-              <p className="text-xs font-semibold uppercase tracking-widest text-amber-600/80 mb-3">
+              <p className="text-xs font-semibold uppercase tracking-widest text-peri-400/80 mb-3">
                 Resy · OpenTable · Tock · SevenRooms · TheFork
               </p>
               <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-4 leading-tight">
@@ -118,9 +135,17 @@ export default function App() {
             </div>
           )}
 
+          {/* Proximity warning */}
+          {proximityWarning && (
+            <div className="mb-4 flex items-start gap-2.5 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-400 text-sm">
+              <AlertTriangle size={15} className="flex-shrink-0 mt-0.5" />
+              <span>{proximityWarning}</span>
+            </div>
+          )}
+
           <SearchBar onSearch={handleSearch} loading={loading} />
 
-          {/* Platform results summary — compact, not dashboard-y */}
+          {/* Platform results summary */}
           {hasSearched && (
             <div className="flex flex-wrap gap-3 mt-4">
               {ALL_PLATFORMS.map((p) => (
@@ -129,11 +154,11 @@ export default function App() {
                     <PlatformBadge platform={p} />
                     <span className={[
                       'text-[10px] font-medium tabular-nums',
-                      platformStatus[p] === 'loading' ? 'text-amber-500/70 animate-pulse' :
-                      platformStatus[p] === 'done'    ? 'text-emerald-500/80' : 'text-slate-600',
+                      platformStatus[p] === 'loading'     ? 'text-peri-400/70 animate-pulse' :
+                      platformStatus[p] === 'done'        ? 'text-emerald-500/80' : 'text-slate-600',
                     ].join(' ')}>
-                      {platformStatus[p] === 'loading' ? '···' :
-                       platformStatus[p] === 'done'    ? `${platformCounts[p] || 0}` : '—'}
+                      {platformStatus[p] === 'loading'     ? '···' :
+                       platformStatus[p] === 'done'        ? `${platformCounts[p] || 0}` : '—'}
                     </span>
                   </div>
                 ) : null
@@ -175,13 +200,13 @@ export default function App() {
                   <div className="flex-shrink-0 flex items-center rounded-full border border-navy-600 overflow-hidden">
                     <button
                       onClick={() => setViewMode('list')}
-                      className={['flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold transition-all', viewMode === 'list' ? 'bg-amber-500/20 text-amber-400' : 'text-slate-500 hover:text-white'].join(' ')}
+                      className={['flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold transition-all', viewMode === 'list' ? 'bg-peri-500/20 text-peri-300' : 'text-slate-500 hover:text-white'].join(' ')}
                     >
                       <List size={12} /> List
                     </button>
                     <button
                       onClick={() => setViewMode('map')}
-                      className={['flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold transition-all', viewMode === 'map' ? 'bg-amber-500/20 text-amber-400' : 'text-slate-500 hover:text-white'].join(' ')}
+                      className={['flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold transition-all', viewMode === 'map' ? 'bg-peri-500/20 text-peri-300' : 'text-slate-500 hover:text-white'].join(' ')}
                     >
                       <Map size={12} /> Map
                     </button>

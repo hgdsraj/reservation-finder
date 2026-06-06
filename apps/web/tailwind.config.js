@@ -5,26 +5,33 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Warm espresso scale for dark mode (replaces cold navy)
+        // Periwinkle / cool blue-gray scale — dark mode
         navy: {
-          900: '#1C1409',
-          800: '#231810',
-          700: '#2D200F',
-          600: '#3A2815',
-          500: '#4A351C',
+          900: '#0D1117',
+          800: '#0F1420',
+          700: '#161B2E',
+          600: '#1E2640',
+          500: '#2A3354',
         },
         card: {
-          bg:    '#261A0D',
-          border:'#3D2C18',
-          hover: '#2F2210',
+          bg:    '#141929',
+          border:'#1E2640',
+          hover: '#1A2035',
         },
-        // Warm cream scale for light mode accents
+        // Cool lavender-white scale — light mode
         cream: {
-          50:  '#FFFDF9',
-          100: '#FBF8F4',
-          200: '#F7F3EC',
-          300: '#EEE5D8',
-          400: '#E0D4C0',
+          50:  '#F5F7FF',
+          100: '#EEF1FF',
+          200: '#E1E5F7',
+          300: '#CDD3EF',
+          400: '#B4BCE6',
+        },
+        // Periwinkle accent
+        peri: {
+          300: '#A5B4FC',
+          400: '#818CF8',
+          500: '#6366F1',
+          600: '#4F46E5',
         },
       },
       fontFamily: {
@@ -32,8 +39,8 @@ export default {
         display: ['"Playfair Display"', 'Georgia', 'serif'],
       },
       backgroundImage: {
-        'hero-gradient': 'linear-gradient(160deg, #1C1409 0%, #231810 45%, #2D200F 100%)',
-        'card-gradient': 'linear-gradient(180deg, transparent 35%, rgba(26,14,6,0.97) 100%)',
+        'hero-gradient': 'linear-gradient(160deg, #0D1117 0%, #0F1420 45%, #161B2E 100%)',
+        'card-gradient': 'linear-gradient(180deg, transparent 35%, rgba(13,17,23,0.97) 100%)',
       },
     },
   },

@@ -10,36 +10,36 @@
   }
 
   body {
-    background-color: #1C1409;
-    color: #F5EDE0;
+    background-color: #0D1117;
+    color: #E6EDF3;
     font-family: 'Inter', system-ui, sans-serif;
     min-height: 100vh;
     transition: background-color 0.3s ease, color 0.3s ease;
   }
 
   ::-webkit-scrollbar { width: 5px; height: 5px; }
-  ::-webkit-scrollbar-track { background: #231810; }
-  ::-webkit-scrollbar-thumb { background: #3D2C18; border-radius: 4px; }
-  ::-webkit-scrollbar-thumb:hover { background: #4A3520; }
+  ::-webkit-scrollbar-track { background: #0F1420; }
+  ::-webkit-scrollbar-thumb { background: #1E2640; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #2A3354; }
 }
 
 @layer utilities {
   .shimmer {
-    background: linear-gradient(90deg, #261A0D 25%, #2F2210 50%, #261A0D 75%);
+    background: linear-gradient(90deg, #141929 25%, #1A2035 50%, #141929 75%);
     background-size: 200% 100%;
     animation: shimmer 1.6s ease-in-out infinite;
   }
 
-  /* Softer glass — less "frosted tech panel", more warm translucency */
   .glass {
-    background: rgba(28, 20, 9, 0.82);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background: rgba(13, 17, 23, 0.88);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     transition: background 0.3s ease;
   }
 
+  /* Periwinkle gradient for headline accent */
   .text-gradient {
-    background: linear-gradient(135deg, #E8924A 10%, #F5C842 90%);
+    background: linear-gradient(135deg, #818CF8 10%, #A78BFA 90%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -50,18 +50,19 @@
   }
   .card-hover:hover {
     transform: translateY(-3px);
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
   }
 
+  /* Periwinkle slot buttons */
   .slot-btn {
     @apply px-3 py-1 rounded-full text-xs font-semibold transition-all duration-150
-           bg-amber-600/20 text-amber-400 border border-amber-600/30
-           hover:bg-amber-500 hover:text-[#1C1409] hover:border-amber-500 cursor-pointer;
+           bg-indigo-600/20 text-indigo-300 border border-indigo-600/40
+           hover:bg-indigo-500 hover:text-white hover:border-indigo-500 cursor-pointer;
   }
 
   .no-slots {
     @apply px-3 py-1 rounded-full text-xs font-medium
-           bg-[#2D200F]/80 text-[#7A6A55] border border-[#3D2C18]/60;
+           bg-navy-700/80 text-slate-600 border border-navy-600/60;
   }
 }
 
@@ -79,72 +80,99 @@
   animation: fadeUp 0.4s ease-out forwards;
 }
 
-/* ─── Light / Warm Cream Theme ──────────────────────────────────────────────── */
-/* Active when html does NOT have the `dark` class */
+/* ─── Light / Cool Lavender Theme ──────────────────────────────────────────── */
 
 html:not(.dark) body {
-  background-color: #FBF8F4;
-  color: #1A1208;
+  background-color: #F5F7FF;
+  color: #1A1F36;
 }
 
-html:not(.dark) ::-webkit-scrollbar-track { background: #F7F3EC; }
-html:not(.dark) ::-webkit-scrollbar-thumb { background: #E0D4C0; }
-html:not(.dark) ::-webkit-scrollbar-thumb:hover { background: #C8BAA4; }
+html:not(.dark) ::-webkit-scrollbar-track { background: #EEF1FF; }
+html:not(.dark) ::-webkit-scrollbar-thumb { background: #CDD3EF; }
+html:not(.dark) ::-webkit-scrollbar-thumb:hover { background: #B4BCE6; }
 
 html:not(.dark) .bg-hero-gradient {
-  background: linear-gradient(160deg, #FBF8F4 0%, #F7F3EC 45%, #F0E9DF 100%) !important;
+  background: linear-gradient(160deg, #F5F7FF 0%, #EEF1FF 45%, #E5EAFF 100%) !important;
 }
 
 html:not(.dark) .glass {
-  background: rgba(251, 248, 244, 0.9) !important;
-  border-color: rgba(58, 40, 21, 0.1) !important;
-  box-shadow: 0 1px 0 rgba(58, 40, 21, 0.08);
+  background: rgba(245, 247, 255, 0.94) !important;
+  border-color: rgba(129, 140, 248, 0.15) !important;
+  box-shadow: 0 1px 0 rgba(129, 140, 248, 0.1);
 }
 
 html:not(.dark) .shimmer {
-  background: linear-gradient(90deg, #F7F3EC 25%, #EEE5D8 50%, #F7F3EC 75%) !important;
+  background: linear-gradient(90deg, #EEF1FF 25%, #E1E5F7 50%, #EEF1FF 75%) !important;
   background-size: 200% 100% !important;
 }
 
 html:not(.dark) .bg-card-gradient {
-  background: linear-gradient(180deg, transparent 35%, rgba(255, 253, 249, 0.97) 100%) !important;
+  background: linear-gradient(180deg, transparent 35%, rgba(245, 247, 255, 0.97) 100%) !important;
 }
 
-/* Warm-tinted navy → warm cream scale */
-html:not(.dark) .bg-navy-900 { background-color: #FBF8F4 !important; }
-html:not(.dark) .bg-navy-800 { background-color: #F7F3EC !important; }
-html:not(.dark) .bg-navy-700 { background-color: #EEE5D8 !important; }
-html:not(.dark) .bg-navy-600 { background-color: #E4D9C8 !important; }
-html:not(.dark) .bg-navy-500 { background-color: #D8CAAF !important; }
+/* Navy scale → cool lavender-white */
+html:not(.dark) .bg-navy-900 { background-color: #F5F7FF !important; }
+html:not(.dark) .bg-navy-800 { background-color: #EEF1FF !important; }
+html:not(.dark) .bg-navy-700 { background-color: #E1E5F7 !important; }
+html:not(.dark) .bg-navy-600 { background-color: #CDD3EF !important; }
+html:not(.dark) .bg-navy-500 { background-color: #B4BCE6 !important; }
 
-html:not(.dark) .bg-card-bg    { background-color: #FFFCF7 !important; }
-html:not(.dark) .border-card-border { border-color: #E8DDD0 !important; }
-html:not(.dark) .border-navy-700    { border-color: #E8DDD0 !important; }
-html:not(.dark) .border-navy-600    { border-color: #DDD0BC !important; }
-html:not(.dark) .border-navy-700\/50 { border-color: rgba(232, 221, 208, 0.6) !important; }
+/* Search bar outer container (bg-navy-800/70) */
+html:not(.dark) .bg-navy-800\/70 { background-color: rgba(238, 241, 255, 0.96) !important; border-color: rgba(129, 140, 248, 0.2) !important; }
 
-html:not(.dark) .card-hover:hover { box-shadow: 0 12px 36px rgba(58, 40, 21, 0.12) !important; }
+/* Search bar inner field bg (bg-navy-700/40) */
+html:not(.dark) .bg-navy-700\/40 { background-color: rgba(255, 255, 255, 0.8) !important; }
 
-/* Text */
-html:not(.dark) .text-white    { color: #1A1208 !important; }
-html:not(.dark) .text-slate-300 { color: #3D2D1C !important; }
-html:not(.dark) .text-slate-400 { color: #5C4D3C !important; }
-html:not(.dark) .text-slate-500 { color: #7A6A55 !important; }
-html:not(.dark) .text-slate-600 { color: #A09080 !important; }
-html:not(.dark) .text-slate-700 { color: #C8BAA4 !important; }
+html:not(.dark) .bg-card-bg      { background-color: #FFFFFF !important; }
+html:not(.dark) .border-card-border { border-color: #E1E5F7 !important; }
+html:not(.dark) .border-navy-700    { border-color: #CDD3EF !important; }
+html:not(.dark) .border-navy-600    { border-color: #B4BCE6 !important; }
+html:not(.dark) .border-navy-700\/50 { border-color: rgba(205, 211, 239, 0.6) !important; }
+html:not(.dark) .border-navy-600\/50 { border-color: rgba(180, 188, 230, 0.5) !important; }
+html:not(.dark) .border-navy-600\/60 { border-color: rgba(180, 188, 230, 0.6) !important; }
+html:not(.dark) .border-navy-600\/60 { border-color: rgba(180, 188, 230, 0.6) !important; }
+html:not(.dark) .bg-navy-600\/60 { background-color: rgba(180, 188, 230, 0.3) !important; }
+
+html:not(.dark) .card-hover:hover { box-shadow: 0 12px 36px rgba(99, 102, 241, 0.1) !important; }
+
+/* Text overrides */
+html:not(.dark) .text-white    { color: #1A1F36 !important; }
+html:not(.dark) .text-slate-300 { color: #374262 !important; }
+html:not(.dark) .text-slate-400 { color: #4A5480 !important; }
+html:not(.dark) .text-slate-500 { color: #6B7499 !important; }
+html:not(.dark) .text-slate-600 { color: #9AA0C0 !important; }
+html:not(.dark) .text-slate-700 { color: #B4BCE6 !important; }
 
 html:not(.dark) .no-slots {
-  background-color: #F0EAE0 !important;
-  color: #9C8A76 !important;
-  border-color: #E0D4C0 !important;
+  background-color: #EEF1FF !important;
+  color: #6B7499 !important;
+  border-color: #CDD3EF !important;
 }
 
 html:not(.dark) input[type="date"] { color-scheme: light !important; }
 
-/* Price badge on image stays readable */
+/* Price badge */
 html:not(.dark) .bg-navy-900\/80 {
-  background-color: rgba(255, 252, 247, 0.9) !important;
+  background-color: rgba(255, 255, 255, 0.9) !important;
 }
 
-/* Leaflet map popup text (always has white bg natively) */
-html:not(.dark) .leaflet-popup-content-wrapper { box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+/* Slot buttons in light mode — keep periwinkle accent */
+html:not(.dark) .slot-btn {
+  background-color: rgba(99, 102, 241, 0.1) !important;
+  color: #4F46E5 !important;
+  border-color: rgba(99, 102, 241, 0.25) !important;
+}
+html:not(.dark) .slot-btn:hover {
+  background-color: #6366F1 !important;
+  color: white !important;
+  border-color: #6366F1 !important;
+}
+
+/* Theme toggle button */
+html:not(.dark) .text-slate-500 { color: #6B7499 !important; }
+
+/* Leaflet popup */
+html:not(.dark) .leaflet-popup-content-wrapper { box-shadow: 0 4px 16px rgba(99, 102, 241, 0.15); }
+
+/* Select options bg in light mode */
+html:not(.dark) select option { background-color: #F5F7FF; color: #1A1F36; }

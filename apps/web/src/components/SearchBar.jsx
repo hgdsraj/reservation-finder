@@ -24,8 +24,8 @@ function formatPlaceLabel(p) {
   return parts.join(', ');
 }
 
-// Input field wrapper — adapts to both dark (warm espresso) and light (warm cream)
-const fieldCls = 'flex items-center gap-2 px-3 py-2.5 rounded-xl border transition-colors bg-navy-700/40 border-navy-600/60 hover:border-amber-500/40 focus-within:border-amber-500/70';
+// Input field wrapper — adapts to dark (deep blue) and light (cool lavender-white)
+const fieldCls = 'flex items-center gap-2 px-3 py-2.5 rounded-xl border transition-colors bg-navy-700/40 border-navy-600/60 hover:border-peri-400/40 focus-within:border-peri-400/70';
 
 export function SearchBar({ onSearch, loading }) {
   const today = format(new Date(), 'yyyy-MM-dd');
@@ -105,7 +105,7 @@ export function SearchBar({ onSearch, loading }) {
             fieldCls,
             selectedPlace ? 'border-amber-500/70 bg-amber-500/5' : '',
           )}>
-            <MapPin size={15} className={clsx('flex-shrink-0', selectedPlace ? 'text-amber-500' : 'text-slate-500')} />
+            <MapPin size={15} className={clsx('flex-shrink-0', selectedPlace ? 'text-peri-400' : 'text-slate-500')} />
             <input
               type="text"
               placeholder="City, neighborhood, or area…"
@@ -118,7 +118,7 @@ export function SearchBar({ onSearch, loading }) {
             />
             {sugLoading && <Loader2 size={12} className="animate-spin text-slate-600 flex-shrink-0" />}
             {selectedPlace && !sugLoading && (
-              <span className="text-amber-500 flex-shrink-0">✓</span>
+              <span className="text-peri-400 flex-shrink-0">✓</span>
             )}
           </label>
 
@@ -131,7 +131,7 @@ export function SearchBar({ onSearch, loading }) {
                   onMouseDown={(e) => { e.preventDefault(); selectPlace(place); }}
                   className="w-full text-left px-4 py-2.5 flex items-start gap-3 hover:bg-navy-600 transition-colors border-b border-navy-600/30 last:border-0"
                 >
-                  <MapPin size={12} className="text-amber-500 flex-shrink-0 mt-0.5" />
+                  <MapPin size={12} className="text-peri-400 flex-shrink-0 mt-0.5" />
                   <div className="min-w-0">
                     <div className="text-sm text-white font-medium truncate">{place.label}</div>
                     {place.type && (
@@ -154,7 +154,7 @@ export function SearchBar({ onSearch, loading }) {
 
         {/* Date */}
         <label className={clsx(fieldCls, 'lg:w-44')}>
-          <Calendar size={14} className="text-amber-500 flex-shrink-0" />
+          <Calendar size={14} className="text-peri-400 flex-shrink-0" />
           <input
             type="date"
             value={date}
@@ -168,7 +168,7 @@ export function SearchBar({ onSearch, loading }) {
 
         {/* Time */}
         <label className={clsx(fieldCls, 'lg:w-32')}>
-          <Clock size={14} className="text-amber-500 flex-shrink-0" />
+          <Clock size={14} className="text-peri-400 flex-shrink-0" />
           <select
             value={time}
             onChange={(e) => setTime(e.target.value)}
@@ -184,13 +184,13 @@ export function SearchBar({ onSearch, loading }) {
 
         {/* Party size */}
         <div className={clsx(fieldCls, 'lg:w-28 cursor-default')}>
-          <Users size={14} className="text-amber-500 flex-shrink-0" />
+          <Users size={14} className="text-peri-400 flex-shrink-0" />
           <div className="flex items-center gap-2 flex-1 justify-between">
             <button type="button" onClick={() => setPartySize((p) => Math.max(1, p - 1))}
-              className="w-5 h-5 rounded-full bg-white/10 text-white text-sm flex items-center justify-center hover:bg-amber-500 hover:text-navy-900 transition-colors">−</button>
+              className="w-5 h-5 rounded-full bg-white/10 text-white text-sm flex items-center justify-center hover:bg-peri-500 hover:text-white transition-colors">−</button>
             <span className="text-white text-sm font-semibold w-4 text-center">{partySize}</span>
             <button type="button" onClick={() => setPartySize((p) => Math.min(20, p + 1))}
-              className="w-5 h-5 rounded-full bg-white/10 text-white text-sm flex items-center justify-center hover:bg-amber-500 hover:text-navy-900 transition-colors">+</button>
+              className="w-5 h-5 rounded-full bg-white/10 text-white text-sm flex items-center justify-center hover:bg-peri-500 hover:text-white transition-colors">+</button>
           </div>
         </div>
 
@@ -202,7 +202,7 @@ export function SearchBar({ onSearch, loading }) {
           className={clsx(
             'flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm transition-all active:scale-95 flex-shrink-0',
             canSearch
-              ? 'bg-amber-500 hover:bg-amber-400 text-navy-900'
+              ? 'bg-peri-500 hover:bg-peri-400 text-white'
               : 'bg-navy-700/50 text-slate-600 cursor-not-allowed'
           )}
         >
