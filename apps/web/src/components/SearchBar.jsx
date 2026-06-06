@@ -60,6 +60,12 @@ export function SearchBar({ onSearch, loading }) {
             label: formatPlaceLabel(p),
             city: p.address?.city || p.address?.town || p.address?.village || p.address?.county || query,
             type: p.type,
+            bbox: p.boundingbox ? {
+              south: parseFloat(p.boundingbox[0]),
+              north: parseFloat(p.boundingbox[1]),
+              west:  parseFloat(p.boundingbox[2]),
+              east:  parseFloat(p.boundingbox[3]),
+            } : null,
           }));
         setSuggestions(places);
         setShowDropdown(true);

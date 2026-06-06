@@ -156,6 +156,20 @@ function normalizeTheFork(r, date, partySize) {
   };
 }
 
+// ─── Bbox region filter ───────────────────────────────────────────────────────
+function filterByRegion(incoming, cityInfo) {
+  if (!cityInfo?.bbox || !incoming.length) return incoming;
+  const { south, north, west, east } = cityInfo.bbox;
+  // Expand 20% on each side — catches restaurants at the exact city border
+  const latPad = (north - south) * 0.20;
+  const lngPad = (east - west) * 0.20;
+  return incoming.filter((r) => {
+    if (!r.lat || !r.lng) return true; // no coords → can't filter, keep it
+    return r.lat >= south - latPad && r.lat <= north + latPad
+        && r.lng >= west  - lngPad && r.lng <= east  + lngPad;
+  });
+}
+
 // ─── Dedupe + multi-platform grouping ────────────────────────────────────────
 function normName(n) {
   return (n || '').toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -202,7 +216,6 @@ export function useSearch() {
   const [platformStatus, setPlatformStatus] = useState({});
   const [errors, setErrors] = useState([]);
   const [cityData, setCityData] = useState(null);
-  const [proximityWarning, setProximityWarning] = useState(null);
   const esRef = useRef(null);
 
   const search = useCallback(({ city, date, partySize, time, selectedPlace }) => {
@@ -214,7 +227,6 @@ export function useSearch() {
     setLoading(true);
     setPlatformStatus({});
     setCityData(null);
-    setProximityWarning(null);
 
     const params = new URLSearchParams({ city, date, partySize, time });
     if (selectedPlace?.lat) {
@@ -246,7 +258,8 @@ export function useSearch() {
       const { platform, restaurants: incoming } = JSON.parse(e.data);
       setPlatformStatus((prev) => ({ ...prev, [platform]: 'done' }));
       if (incoming?.length) {
-        setRestaurants((prev) => dedupeAndMerge(prev, incoming));
+        const inRegion = filterByRegion(incoming, cityInfo);
+        if (inRegion.length) setRestaurants((prev) => dedupeAndMerge(prev, inRegion));
       }
     });
 
@@ -278,11 +291,11 @@ export function useSearch() {
         fetcher(args)
           .then((raw) => {
             const results = normalize ? raw.map(normalize).filter(Boolean) : raw;
-            if (results.length) setRestaurants((prev) => dedupeAndMerge(prev, results));
+            const inRegion = filterByRegion(results, cityInfo);
+            if (inRegion.length) setRestaurants((prev) => dedupeAndMerge(prev, inRegion));
             setPlatformStatus((prev) => ({ ...prev, [platform]: 'done' }));
           })
           .catch(() => setPlatformStatus((prev) => {
-            // Don't overwrite an already-successful server-side result
             if (prev[platform] === 'done') return prev;
             return { ...prev, [platform]: 'failed' };
           }));
@@ -303,19 +316,5 @@ export function useSearch() {
     });
   }, []);
 
-  // After restaurants update, check if any are close to the searched city
-  const checkProximity = useCallback((rests, cd) => {
-    if (!cd?.lat || !rests.length) return;
-    const withCoords = rests.filter((r) => r.lat && r.lng);
-    if (!withCoords.length) return;
-    const anyNearby = withCoords.some((r) => haversine(cd.lat, cd.lng, r.lat, r.lng) <= 25);
-    if (!anyNearby) {
-      setProximityWarning(`No reservations found within ${cd.label}. Showing nearest available restaurants.`);
-    } else {
-      setProximityWarning(null);
-    }
-  }, []);
-
-  // Expose a way to trigger proximity check from App after loading finishes
-  return { restaurants, status, loading, platformStatus, errors, cityData, proximityWarning, search, checkProximity };
+  return { restaurants, status, loading, platformStatus, errors, cityData, search };
 }

@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useEffect, useRef, Suspense, lazy } from 'react';
-import { Utensils, Sun, Moon, List, Map, AlertTriangle } from 'lucide-react';
+import React, { useState, useMemo, useEffect, Suspense, lazy } from 'react';
+import { Utensils, Sun, Moon, List, Map } from 'lucide-react';
 import { SearchBar } from './components/SearchBar.jsx';
 import { RestaurantCard } from './components/RestaurantCard.jsx';
 import { FilterPanel } from './components/FilterPanel.jsx';
@@ -14,14 +14,26 @@ const MapView = lazy(() =>
 const ALL_PLATFORMS = ['opentable', 'resy', 'tock', 'sevenrooms', 'thefork'];
 const DEFAULT_FILTERS = { platforms: [], prices: [], minRating: null, sort: 'available' };
 
+function platformSearchUrl(platform, params) {
+  const { city, date, partySize } = params || {};
+  const enc = encodeURIComponent;
+  const name = (city || '').split(',')[0].trim();
+  switch (platform) {
+    case 'opentable':  return `https://www.opentable.com/s/?covers=${partySize}&dateTime=${date}T19%3A00&term=${enc(name)}`;
+    case 'tock':       return `https://www.exploretock.com/search?query=${enc(name)}&date=${date}&size=${partySize}`;
+    case 'sevenrooms': return `https://www.sevenrooms.com/explore/${enc(name)}/restaurants`;
+    case 'thefork':    return `https://www.thefork.com/search?query=${enc(name)}`;
+    default:           return null;
+  }
+}
+
 export default function App() {
-  const { restaurants, status, loading, platformStatus, errors, cityData, proximityWarning, search, checkProximity } = useSearch();
+  const { restaurants, status, loading, platformStatus, errors, cityData, search } = useSearch();
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [searchParams, setSearchParams] = useState(null);
   const [hasSearched, setHasSearched] = useState(false);
   const [viewMode, setViewMode] = useState('list');
   const [isDark, setIsDark] = useState(true);
-  const proximityChecked = useRef(false);
 
   useEffect(() => {
     const stored = localStorage.getItem('theme');
@@ -29,14 +41,6 @@ export default function App() {
     setIsDark(dark);
     document.documentElement.classList.toggle('dark', dark);
   }, []);
-
-  // Check proximity once loading finishes and we have results + coordinates
-  useEffect(() => {
-    if (!loading && restaurants.length > 0 && cityData && !proximityChecked.current) {
-      proximityChecked.current = true;
-      checkProximity(restaurants, cityData);
-    }
-  }, [loading, restaurants, cityData, checkProximity]);
 
   function toggleTheme() {
     const next = !isDark;
@@ -49,7 +53,6 @@ export default function App() {
     setSearchParams(params);
     setHasSearched(true);
     setFilters(DEFAULT_FILTERS);
-    proximityChecked.current = false;
     search(params);
   }
 
@@ -135,14 +138,6 @@ export default function App() {
             </div>
           )}
 
-          {/* Proximity warning */}
-          {proximityWarning && (
-            <div className="mb-4 flex items-start gap-2.5 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-400 text-sm">
-              <AlertTriangle size={15} className="flex-shrink-0 mt-0.5" />
-              <span>{proximityWarning}</span>
-            </div>
-          )}
-
           <SearchBar onSearch={handleSearch} loading={loading} />
 
           {/* Platform results summary */}
@@ -151,19 +146,31 @@ export default function App() {
               {ALL_PLATFORMS.map((p) => {
                 const s = platformStatus[p];
                 if (!s) return null;
+                const isFailed = s === 'failed';
+                const searchUrl = isFailed ? platformSearchUrl(p, searchParams) : null;
                 return (
                   <div key={p} className="flex items-center gap-1.5">
-                    <PlatformBadge platform={p} />
-                    <span className={[
-                      'text-[10px] font-medium tabular-nums',
-                      s === 'loading' ? 'text-slate-400 animate-pulse' :
-                      s === 'done' && platformCounts[p] ? 'text-emerald-400' :
-                      s === 'failed' ? 'text-slate-500' : 'text-slate-600',
-                    ].join(' ')}>
-                      {s === 'loading' ? '···' :
-                       s === 'done'    ? `${platformCounts[p] || 0}` :
-                       s === 'failed'  ? 'failed' : '—'}
-                    </span>
+                    {searchUrl ? (
+                      <a href={searchUrl} target="_blank" rel="noopener noreferrer" className="opacity-60 hover:opacity-100 transition-opacity" title={`Search on ${p}`}>
+                        <PlatformBadge platform={p} />
+                      </a>
+                    ) : (
+                      <PlatformBadge platform={p} />
+                    )}
+                    {s === 'loading' ? (
+                      <span className="text-[10px] font-medium text-slate-400 animate-pulse">···</span>
+                    ) : s === 'done' ? (
+                      <span className={['text-[10px] font-medium tabular-nums', platformCounts[p] ? 'text-emerald-400' : 'text-slate-600'].join(' ')}>
+                        {platformCounts[p] || 0}
+                      </span>
+                    ) : searchUrl ? (
+                      <a href={searchUrl} target="_blank" rel="noopener noreferrer"
+                         className="text-[10px] font-medium text-slate-500 hover:text-peri-300 transition-colors">
+                        search →
+                      </a>
+                    ) : (
+                      <span className="text-[10px] font-medium text-slate-600">—</span>
+                    )}
                   </div>
                 );
               })}

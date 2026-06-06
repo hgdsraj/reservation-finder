@@ -71,8 +71,9 @@ export function MapView({ restaurants, cityData, searchParams, onCardClick }) {
   }
 
   return (
-    <div className="rounded-2xl overflow-hidden border border-card-border" style={{ height: '600px' }}>
+    <div className="rounded-2xl overflow-hidden border border-card-border" style={{ height: '600px', background: '#1a1f3a' }}>
       <MapContainer
+        key={`${center.lat},${center.lng}`}
         center={[center.lat, center.lng]}
         zoom={13}
         style={{ height: '100%', width: '100%' }}
