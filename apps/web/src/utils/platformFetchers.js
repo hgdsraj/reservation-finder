@@ -164,6 +164,68 @@ export async function fetchTock({ city, cityData, date, partySize }) {
   return data?.results || data?.experiences || [];
 }
 
+// ─── SevenRooms (browser-side) ────────────────────────────────────────────────
+
+export async function fetchSevenRooms({ cityData, city, date, partySize }) {
+  const params = new URLSearchParams({
+    city: cityData?.city || city,
+    venue_type: 'restaurant',
+    limit: 20,
+    offset: 0,
+  });
+  if (cityData?.lat) {
+    params.set('lat', cityData.lat);
+    params.set('long', cityData.lng);
+  }
+
+  const res = await fetch(
+    `https://www.sevenrooms.com/api-yoa/search_venues?${params}`,
+    {
+      headers: {
+        Accept: 'application/json',
+        Referer: 'https://www.sevenrooms.com/',
+        Origin: 'https://www.sevenrooms.com',
+      },
+    }
+  );
+
+  if (!res.ok) throw new Error(`SevenRooms ${res.status}`);
+  const data = await res.json();
+  return data?.venues || data?.results || [];
+}
+
+// ─── TheFork (browser-side) ───────────────────────────────────────────────────
+
+export async function fetchTheFork({ cityData, city, date, partySize }) {
+  const params = new URLSearchParams({
+    location: cityData?.city || city,
+    date,
+    partySize,
+    page: 1,
+    perPage: 20,
+    sort: 'overall_rating',
+  });
+  if (cityData?.lat) {
+    params.set('lat', cityData.lat);
+    params.set('lon', cityData.lng);
+  }
+
+  const res = await fetch(
+    `https://www.thefork.com/api/restaurants?${params}`,
+    {
+      headers: {
+        Accept: 'application/json',
+        Referer: 'https://www.thefork.com/',
+        Origin: 'https://www.thefork.com',
+      },
+    }
+  );
+
+  if (!res.ok) throw new Error(`TheFork ${res.status}`);
+  const data = await res.json();
+  return data?.data || data?.restaurants || data?.items || [];
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function addHours(timeStr, hours) {

@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
-import { fetchOpenTable, fetchResy, fetchTock } from '../utils/platformFetchers.js';
+import { fetchOpenTable, fetchResy, fetchTock, fetchSevenRooms, fetchTheFork } from '../utils/platformFetchers.js';
 
 const RESY_PRICE_MAP = { 1: '$', 2: '$$', 3: '$$$', 4: '$$$$' };
 
@@ -95,6 +95,64 @@ function normalizeTockExperience(e) {
     slots: [],
     lat: null,
     lng: null,
+  };
+}
+
+function normalizeSevenRooms(v, date, partySize) {
+  if (!v?.name) return null;
+  const photos = [v.background_image_url, v.logo_url].filter(Boolean);
+  const slots = (v.availability || []).map((s) => ({
+    time: s.time_slot || s.time || '',
+    url: v.url_name
+      ? `https://www.sevenrooms.com/reservations/${v.url_name}?party_size=${partySize}&date=${date}`
+      : 'https://www.sevenrooms.com',
+  })).filter((s) => s.time);
+  return {
+    id: `sevenrooms-${v.id || v.url_name || Math.random().toString(36).slice(2)}`,
+    name: v.name,
+    platform: 'sevenrooms',
+    cuisine: v.venue_category_display || v.cuisine_type_display || 'Restaurant',
+    neighborhood: v.neighborhood || '',
+    address: v.address || '',
+    price: { low: '$', medium: '$$', high: '$$$', very_high: '$$$$' }[v.price_range] || '$$',
+    rating: v.overall_rating ? parseFloat(v.overall_rating).toFixed(1) : null,
+    reviewCount: v.review_count || 0,
+    photos,
+    description: v.description || v.tagline || '',
+    bookingUrl: v.url_name ? `https://www.sevenrooms.com/reservations/${v.url_name}` : 'https://www.sevenrooms.com',
+    slots,
+    lat: v.lat || null,
+    lng: v.lon || null,
+  };
+}
+
+function normalizeTheFork(r, date, partySize) {
+  if (!r?.name) return null;
+  const photos = [r.mainPhoto?.source, r.photo, r.pictures?.[0]].filter(Boolean);
+  const slug = r.slug || r.urlName;
+  const bookingUrl = slug
+    ? `https://www.thefork.com/restaurant/${slug}?date=${date}&partySize=${partySize}`
+    : 'https://www.thefork.com';
+  const slots = (r.availabilities || r.availability || []).map((s) => ({
+    time: s.slot || s.time || '',
+    url: r.url || bookingUrl,
+  })).filter((s) => s.time);
+  return {
+    id: `thefork-${r.uuid || r.id || Math.random().toString(36).slice(2)}`,
+    name: r.name,
+    platform: 'thefork',
+    cuisine: r.servedCuisines?.map((c) => c.label).join(', ') || r.cuisineType || 'Restaurant',
+    neighborhood: r.neighborhoodName || r.district || '',
+    address: r.address?.street || r.address || '',
+    price: { 1: '$', 2: '$$', 3: '$$$', 4: '$$$$' }[r.priceRange] || '$$',
+    rating: r.avgRating ? parseFloat(r.avgRating).toFixed(1) : null,
+    reviewCount: r.reviewCount || r.ratingsCount || 0,
+    photos,
+    description: r.description || r.tagline || '',
+    bookingUrl,
+    slots,
+    lat: r.location?.lat || r.lat || null,
+    lng: r.location?.lng || r.lng || null,
   };
 }
 
@@ -194,46 +252,47 @@ export function useSearch() {
 
     es.addEventListener('platform_error', (e) => {
       const { platform } = JSON.parse(e.data);
-      setPlatformStatus((prev) => ({ ...prev, [platform]: 'blocked' }));
+      // Server-side failure — will retry browser-side below
+      setPlatformStatus((prev) => ({ ...prev, [platform]: 'loading' }));
     });
 
     es.addEventListener('done', () => {
       es.close();
-
-      // Browser-side Resy supplement (uses CORS-enabled api.resy.com)
-      if (cityInfo?.lat) {
-        setPlatformStatus((prev) => ({ ...prev, resy: prev.resy === 'done' ? 'done' : 'loading' }));
-        fetchResy({ cityData: cityInfo, date, partySize })
-          .then((venues) => {
-            const normalized = venues.map((v) => normalizeResyVenue(v, date, partySize)).filter(Boolean);
-            if (normalized.length) setRestaurants((prev) => dedupeAndMerge(prev, normalized));
-            setPlatformStatus((prev) => ({ ...prev, resy: 'done' }));
-          })
-          .catch(() => setPlatformStatus((prev) => ({ ...prev, resy: prev.resy === 'done' ? 'done' : 'error' })));
-      }
-
-      // Browser-side OpenTable — try, might be CORS-blocked
-      setPlatformStatus((prev) => ({ ...prev, opentable: 'loading' }));
-      fetchOpenTable({ city: resolvedCity, cityData: cityInfo, date, partySize, time })
-        .then((results) => {
-          if (results.length) setRestaurants((prev) => dedupeAndMerge(prev, results));
-          // 'done' whether or not results came back — 0 is still a valid response
-          setPlatformStatus((prev) => ({ ...prev, opentable: 'done' }));
-        })
-        .catch(() => setPlatformStatus((prev) => ({ ...prev, opentable: 'blocked' })));
-
-      // Browser-side Tock — try, might be CORS-blocked
-      setPlatformStatus((prev) => ({ ...prev, tock: 'loading' }));
-      fetchTock({ city: resolvedCity, cityData: cityInfo, date, partySize })
-        .then((items) => {
-          const normalized = items.map((e) => normalizeTockExperience(e)).filter(Boolean);
-          if (normalized.length) setRestaurants((prev) => dedupeAndMerge(prev, normalized));
-          setPlatformStatus((prev) => ({ ...prev, tock: 'done' }));
-        })
-        .catch(() => setPlatformStatus((prev) => ({ ...prev, tock: 'blocked' })));
-
       setLoading(false);
       setStatus(null);
+
+      // Mark all browser-side platforms as loading immediately
+      setPlatformStatus((prev) => ({
+        ...prev,
+        opentable: prev.opentable === 'done' ? 'done' : 'loading',
+        tock:       prev.tock      === 'done' ? 'done' : 'loading',
+        sevenrooms: prev.sevenrooms === 'done' ? 'done' : 'loading',
+        thefork:    prev.thefork   === 'done' ? 'done' : 'loading',
+        resy:       prev.resy      === 'done' ? 'done' : 'loading',
+      }));
+
+      // Fire all browser-side requests in parallel
+      const args = { city: resolvedCity, cityData: cityInfo, date, partySize, time };
+
+      function run(platform, fetcher, normalize) {
+        fetcher(args)
+          .then((raw) => {
+            const results = normalize ? raw.map(normalize).filter(Boolean) : raw;
+            if (results.length) setRestaurants((prev) => dedupeAndMerge(prev, results));
+            setPlatformStatus((prev) => ({ ...prev, [platform]: 'done' }));
+          })
+          .catch(() => setPlatformStatus((prev) => {
+            // Don't overwrite an already-successful server-side result
+            if (prev[platform] === 'done') return prev;
+            return { ...prev, [platform]: 'failed' };
+          }));
+      }
+
+      if (cityInfo?.lat) run('resy',       fetchResy,       (v) => normalizeResyVenue(v, date, partySize));
+      run('opentable',  fetchOpenTable,  null);
+      run('tock',       fetchTock,       (e) => normalizeTockExperience(e));
+      run('sevenrooms', fetchSevenRooms, (v) => normalizeSevenRooms(v, date, partySize));
+      run('thefork',    fetchTheFork,    (r) => normalizeTheFork(r, date, partySize));
     });
 
     es.addEventListener('error', () => {
