@@ -1,0 +1,28 @@
+# OpenTable and Tock are scraped through a real headless browser (see
+# apps/api/src/utils/browser.js), so the deploy image needs Chromium + the
+# system libraries headless Chrome depends on. The Debian "chromium" package
+# installs to /usr/bin/chromium, which browser.js auto-detects.
+[phases.setup]
+aptPkgs = [
+  "chromium",
+  "fonts-liberation",
+  "libnss3",
+  "libatk1.0-0",
+  "libatk-bridge2.0-0",
+  "libcups2",
+  "libdrm2",
+  "libxkbcommon0",
+  "libxcomposite1",
+  "libxdamage1",
+  "libxfixes3",
+  "libxrandr2",
+  "libgbm1",
+  "libasound2",
+  "libpango-1.0-0",
+  "libcairo2",
+]
+
+[variables]
+# Use the system Chromium; don't let puppeteer try to download its own.
+PUPPETEER_EXECUTABLE_PATH = "/usr/bin/chromium"
+PUPPETEER_SKIP_DOWNLOAD = "true"

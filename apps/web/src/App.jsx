@@ -11,18 +11,17 @@ const MapView = lazy(() =>
   import('./components/MapView.jsx').then((m) => ({ default: m.MapView }))
 );
 
-const ALL_PLATFORMS = ['opentable', 'resy', 'tock', 'sevenrooms', 'thefork'];
+const ALL_PLATFORMS = ['resy', 'opentable', 'tock'];
 const DEFAULT_FILTERS = { platforms: [], prices: [], minRating: null, sort: 'available' };
 
 function platformSearchUrl(platform, params) {
-  const { city, date, partySize } = params || {};
+  const { city, date, partySize, time } = params || {};
   const enc = encodeURIComponent;
   const name = (city || '').split(',')[0].trim();
+  const t = time || '19:00';
   switch (platform) {
-    case 'opentable':  return `https://www.opentable.com/s/?covers=${partySize}&dateTime=${date}T19%3A00&term=${enc(name)}`;
-    case 'tock':       return `https://www.exploretock.com/search?query=${enc(name)}&date=${date}&size=${partySize}`;
-    case 'sevenrooms': return `https://www.sevenrooms.com/explore/${enc(name)}/restaurants`;
-    case 'thefork':    return `https://www.thefork.com/search?query=${enc(name)}`;
+    case 'opentable':  return `https://www.opentable.com/s/?covers=${partySize}&dateTime=${date}T${enc(t)}&term=${enc(name)}`;
+    case 'tock':       return `https://www.exploretock.com/search?query=${enc(name)}&date=${date}&size=${partySize}&time=${enc(t)}`;
     default:           return null;
   }
 }
@@ -115,7 +114,7 @@ export default function App() {
           {!hasSearched && (
             <div className="text-center mb-10">
               <p className="text-xs font-semibold uppercase tracking-widest text-peri-400/80 mb-3">
-                Resy · OpenTable · Tock · SevenRooms · TheFork
+                Resy · OpenTable · Tock
               </p>
               <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-4 leading-tight">
                 Your table is{' '}

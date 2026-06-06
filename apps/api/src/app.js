@@ -46,4 +46,13 @@ if (require.main === module) {
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`[api] http://0.0.0.0:${PORT}  (${process.env.NODE_ENV || 'development'})`);
   });
+
+  // Tidy up the shared headless browser on shutdown so it doesn't linger.
+  const { closeBrowser } = require('./utils/browser');
+  for (const sig of ['SIGTERM', 'SIGINT']) {
+    process.on(sig, async () => {
+      await closeBrowser();
+      process.exit(0);
+    });
+  }
 }

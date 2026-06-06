@@ -1,6 +1,6 @@
 # TableFinder
 
-Search Resy, OpenTable, Tock, SevenRooms, and TheFork simultaneously — results stream in live, any city, book direct.
+Search Resy, OpenTable, and Tock simultaneously — results stream in live, any city, book direct.
 
 ## Local Development
 
@@ -96,7 +96,7 @@ npm test --workspace=apps/web
 ```
 reservation-finder/
 ├── apps/
-│   ├── api/          Express backend — SSE streaming, Resy scraper, geocoding
+│   ├── api/          Express backend — SSE streaming, scrapers, headless browser, geocoding
 │   └── web/          React + Vite + Tailwind frontend
 ├── scripts/          One-off API test scripts (inspect-resy.js, test-apis2.js)
 └── package.json      npm workspaces root
@@ -105,10 +105,13 @@ reservation-finder/
 ## FAQ
 
 **How does the multi-platform fetching work?**
-The app uses a hybrid approach. Resy is fetched server-side (SSE) and simultaneously called directly from the browser. After the SSE stream closes, the browser fires additional requests to OpenTable and Tock — their widget/consumer APIs have CORS headers enabled for third-party embedding, so they work from a browser context even though they block server-side Node.js requests (Akamai/Cloudflare). SevenRooms and TheFork are attempted server-side but currently return 403/404 for most cities and show "blocked" in the status bar.
+Everything runs server-side and streams to the browser over SSE. Resy exposes a plain JSON search API (`api.resy.com/4/find`) that works with a static API key. OpenTable and Tock sit behind bot-walls (Akamai / a protobuf gateway) that block plain HTTP requests, so they're driven through a real stealth headless browser (`apps/api/src/utils/browser.js`): OpenTable via its own GraphQL gateway once a CSRF token + sensor cookies exist, Tock by scraping its rendered search-results page. Browser-side fetching was removed entirely — every reservation API blocks cross-origin requests via CORS, so it never actually worked.
 
-**Why do SevenRooms and TheFork show "blocked"?**
-Both services block server-side scraping via Akamai/Cloudflare. Their APIs don't have CORS headers enabled for browser-side fetching either, so they can't be called from a browser without hitting CORS errors. The status indicator will say "blocked" for these platforms.
+**Why only Resy, OpenTable, and Tock?**
+Those are the three platforms that are actually city-searchable. SevenRooms has no public city search — it only powers per-venue booking widgets embedded on restaurants' own sites. TheFork is behind a DataDome captcha and is Europe-only, so it returns nothing for North American cities. Both were removed rather than left showing permanent "failed" badges.
+
+**Will the headless-browser scrapers work on Railway?**
+Bot-walls also score IP reputation. From a residential IP the stealth browser passes; from a datacenter IP (Railway's default) Akamai/DataDome may still return 403. For reliable production results, set `PROXY_URL` to a residential/ISP proxy (e.g. `http://user:pass@host:port`) — `browser.js` routes the browser through it. Chromium itself is installed via `nixpacks.toml`.
 
 **Why is the city autocomplete required before searching?**
 Geocoding is done via Nominatim (OpenStreetMap). You must confirm the dropdown selection so the app gets exact lat/lng coordinates — this prevents ambiguity (e.g. "Vancouver BC" vs "Vancouver WA") and enables proximity filtering.
@@ -120,7 +123,6 @@ If a search for a small city (e.g. Surrey or Osoyoos) returns restaurants whose 
 If the same restaurant name appears on multiple platforms (e.g. Resy + OpenTable), they are merged into one card. The top-left of the card shows all available platform badges — tap/click one to switch which platform's slots and booking link are shown.
 
 **How do I add a new scraper platform?**
-1. Add a scraper in `apps/api/src/scrapers/yourplatform.js` exporting `searchRestaurants({ city, cityData, date, partySize })`
-2. Register it in `apps/api/src/routes/search.js`
-3. Add a browser-side fetcher in `apps/web/src/utils/platformFetchers.js`
-4. Add a normalizer in `apps/web/src/hooks/useSearch.js`
+1. Add a scraper in `apps/api/src/scrapers/yourplatform.js` exporting `searchRestaurants({ city, cityData, date, partySize, time })` that returns already-normalized restaurant objects. Use `utils/browser.js` (`withPage` / `getBrowser`) if the site is bot-walled.
+2. Register it in `SERVER_PLATFORMS` in `apps/api/src/routes/search.js`
+3. Add the platform id to `ALL_PLATFORMS` in `apps/web/src/App.jsx` and give it a badge in `apps/web/src/components/PlatformBadge.jsx`

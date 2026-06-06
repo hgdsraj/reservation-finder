@@ -12,11 +12,9 @@ jest.mock('../utils/cityCoords', () => ({
   }),
 }));
 
-jest.mock('../scrapers/opentable',  () => ({ searchRestaurants: jest.fn().mockResolvedValue([]) }));
-jest.mock('../scrapers/resy',       () => ({ searchRestaurants: jest.fn().mockResolvedValue([]) }));
-jest.mock('../scrapers/tock',       () => ({ searchRestaurants: jest.fn().mockResolvedValue([]) }));
-jest.mock('../scrapers/sevenrooms', () => ({ searchRestaurants: jest.fn().mockResolvedValue([]) }));
-jest.mock('../scrapers/thefork',    () => ({ searchRestaurants: jest.fn().mockResolvedValue([]) }));
+jest.mock('../scrapers/opentable', () => ({ searchRestaurants: jest.fn().mockResolvedValue([]) }));
+jest.mock('../scrapers/resy',      () => ({ searchRestaurants: jest.fn().mockResolvedValue([]) }));
+jest.mock('../scrapers/tock',      () => ({ searchRestaurants: jest.fn().mockResolvedValue([]) }));
 
 describe('GET /api/health', () => {
   test('returns 200 ok', async () => {

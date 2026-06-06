@@ -4,16 +4,16 @@ const { resolveCity } = require('../utils/cityCoords');
 const opentable = require('../scrapers/opentable');
 const resy = require('../scrapers/resy');
 const tock = require('../scrapers/tock');
-const sevenrooms = require('../scrapers/sevenrooms');
-const thefork = require('../scrapers/thefork');
 const { enrichWithYelp } = require('../enrichers/yelp');
 
-// OpenTable and Tock are called from the browser (bypasses Akamai/Cloudflare).
-// SevenRooms and TheFork are attempted server-side but may return empty.
+// All three run server-side. Resy uses a plain JSON API; OpenTable and Tock sit
+// behind Akamai/protobuf walls and are driven through a stealth headless browser
+// (see utils/browser.js). SevenRooms (no city search — embedded widgets only) and
+// TheFork (DataDome captcha + Europe-only) are not city-searchable, so omitted.
 const SERVER_PLATFORMS = [
-  { name: 'resy',       fn: (a) => resy.searchRestaurants(a) },
-  { name: 'sevenrooms', fn: (a) => sevenrooms.searchRestaurants(a) },
-  { name: 'thefork',   fn: (a) => thefork.searchRestaurants(a) },
+  { name: 'resy',      fn: (a) => resy.searchRestaurants(a) },
+  { name: 'opentable', fn: (a) => opentable.searchRestaurants(a) },
+  { name: 'tock',      fn: (a) => tock.searchRestaurants(a) },
 ];
 
 function sseWrite(res, event, data) {

@@ -19,11 +19,9 @@ describe('App — landing page', () => {
 
   test('renders platform badges in header', () => {
     render(<App />);
-    expect(screen.getAllByText('OpenTable').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Resy').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('OpenTable').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Tock').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('SevenRooms').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('TheFork').length).toBeGreaterThan(0);
   });
 
   test('renders feature cards', () => {
