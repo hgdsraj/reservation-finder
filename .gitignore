@@ -10,3 +10,4 @@ backend/.env
 apps/web/dist/
 apps/api/coverage/
 apps/web/coverage/
+.claude/
