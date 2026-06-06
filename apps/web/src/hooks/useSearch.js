@@ -194,7 +194,7 @@ export function useSearch() {
 
     es.addEventListener('platform_error', (e) => {
       const { platform } = JSON.parse(e.data);
-      setPlatformStatus((prev) => ({ ...prev, [platform]: 'unavailable' }));
+      setPlatformStatus((prev) => ({ ...prev, [platform]: 'blocked' }));
     });
 
     es.addEventListener('done', () => {
@@ -217,9 +217,10 @@ export function useSearch() {
       fetchOpenTable({ city: resolvedCity, cityData: cityInfo, date, partySize, time })
         .then((results) => {
           if (results.length) setRestaurants((prev) => dedupeAndMerge(prev, results));
-          setPlatformStatus((prev) => ({ ...prev, opentable: results.length ? 'done' : 'unavailable' }));
+          // 'done' whether or not results came back — 0 is still a valid response
+          setPlatformStatus((prev) => ({ ...prev, opentable: 'done' }));
         })
-        .catch(() => setPlatformStatus((prev) => ({ ...prev, opentable: 'unavailable' })));
+        .catch(() => setPlatformStatus((prev) => ({ ...prev, opentable: 'blocked' })));
 
       // Browser-side Tock — try, might be CORS-blocked
       setPlatformStatus((prev) => ({ ...prev, tock: 'loading' }));
@@ -227,9 +228,9 @@ export function useSearch() {
         .then((items) => {
           const normalized = items.map((e) => normalizeTockExperience(e)).filter(Boolean);
           if (normalized.length) setRestaurants((prev) => dedupeAndMerge(prev, normalized));
-          setPlatformStatus((prev) => ({ ...prev, tock: normalized.length ? 'done' : 'unavailable' }));
+          setPlatformStatus((prev) => ({ ...prev, tock: 'done' }));
         })
-        .catch(() => setPlatformStatus((prev) => ({ ...prev, tock: 'unavailable' })));
+        .catch(() => setPlatformStatus((prev) => ({ ...prev, tock: 'blocked' })));
 
       setLoading(false);
       setStatus(null);

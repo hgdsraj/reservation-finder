@@ -151,18 +151,22 @@ export default function App() {
               {ALL_PLATFORMS.map((p) => {
                 const s = platformStatus[p];
                 if (!s) return null;
+                const isLoading = s === 'loading';
+                const isDone    = s === 'done';
+                const isBlocked = s === 'blocked';
                 return (
                   <div key={p} className="flex items-center gap-1.5">
                     <PlatformBadge platform={p} />
                     <span className={[
-                      'text-[10px] font-medium tabular-nums',
-                      s === 'loading'     ? 'text-peri-400/70 animate-pulse' :
-                      s === 'done'        ? 'text-emerald-500/80' :
-                      s === 'unavailable' ? 'text-slate-600' : 'text-red-500/70',
+                      'text-[10px] font-semibold tabular-nums px-1.5 py-0.5 rounded-full',
+                      isLoading ? 'text-peri-300 animate-pulse bg-peri-500/10' :
+                      isDone && platformCounts[p] ? 'text-emerald-400 bg-emerald-500/10' :
+                      isDone    ? 'text-slate-500 bg-white/5' :
+                      isBlocked ? 'text-red-400 bg-red-500/10' : 'text-slate-500',
                     ].join(' ')}>
-                      {s === 'loading'     ? '···' :
-                       s === 'done'        ? `${platformCounts[p] || 0}` :
-                       s === 'unavailable' ? 'blocked' : 'error'}
+                      {isLoading ? '···' :
+                       isDone    ? `${platformCounts[p] || 0}` :
+                       isBlocked ? 'blocked' : '—'}
                     </span>
                   </div>
                 );
