@@ -7,3 +7,6 @@ backend/.env
 *.log
 .DS_Store
 .cache/
+apps/web/dist/
+apps/api/coverage/
+apps/web/coverage/
