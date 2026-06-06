@@ -83,7 +83,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-hero-gradient">
       {/* Header */}
-      <header className="border-b border-navy-700/50 glass sticky top-0 z-20">
+      <header className="border-b border-navy-700/50 glass sticky top-0 z-[1000]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <button
             onClick={goHome}

@@ -71,10 +71,11 @@ function normalizeVenue(v, date, partySize) {
     // date.start is "YYYY-MM-DD HH:MM:SS" — extract time portion
     const raw = s.date?.start || '';
     const time = raw.includes(' ') ? raw.split(' ')[1]?.slice(0, 5) : '';
-    // Resy has no stable per-slot deeplink — `resy.com/book/details?token=…`
-    // redirects to resy.com/404. Link to the venue page with the date + party
-    // preset; it opens showing that day's available times to book.
-    const url = `${bookingBase}?date=${date}&seats=${partySize}`;
+    
+    // Convert "12:15" to "1215" for Resy's web query param to pre-select the slot
+    const hhmm = time.replace(':', '');
+    const url = `${bookingBase}?date=${date}&seats=${partySize}${hhmm ? `&time=${hhmm}` : ''}`;
+
     return { time, url };
   }).filter((s) => s.time);
 

@@ -11,11 +11,14 @@
 const { getBrowser } = require('../utils/browser');
 const { cache, cacheKey } = require('../utils/cache');
 
-// Persisted-query hashes (stable across deploys; refresh if OpenTable rotates them).
-const HASHES = {
-  Autocomplete: 'fe1d118abd4c227750693027c2414d43014c2493f64f49bcef5a65274ce9c3c3',
-  HomeModuleLists: '0e5866ce03cf2311495610b1376204f29a05be114dbddb0dbfc70dd20eea7fab',
-  RestaurantsAvailability: 'cbcf4838a9b399f742e3741785df64560a826d8d3cc2828aa01ab09a8455e29e',
+// Full GQL queries. Using full strings is more resilient than hashes which rotate frequently.
+const QUERIES = {
+  Autocomplete: `query Autocomplete($term: String!, $latitude: Float, $longitude: Float) { autocomplete(term: $term, latitude: $latitude, longitude: $longitude) { autocompleteResults { metroId } } }`,
+  HomeModuleLists: `query HomeModuleLists($metroId: Int, $latitude: Float, $longitude: Float, $requestedDate: String, $requestedTime: String, $partySize: Int) { 
+    home(metroId: $metroId, latitude: $latitude, longitude: $longitude) { 
+      featured { restaurants { restaurantId name urlSlug restaurantAvailabilityToken primaryCuisine { name } neighborhood { name } address { line1 } priceBand { priceBandId } photo { url } description coordinates { latitude longitude } } } 
+    } 
+  }`,
 };
 
 const PRICE_MAP = { 1: '$', 2: '$$', 3: '$$$', 4: '$$$$' };
@@ -42,9 +45,9 @@ async function searchRestaurants({ city, cityData, date, partySize, time }) {
     await page.goto('https://www.opentable.com/', { waitUntil: 'domcontentloaded', timeout: 30000 });
     await new Promise((r) => setTimeout(r, 3000));
 
-    const gql = (opname, variables) =>
+    const gql = (opname, variables, query) =>
       page.evaluate(
-        async (opname, variables, hash, csrf) => {
+        async (opname, variables, query, csrf) => {
           const res = await fetch(`/dapi/fe/gql?optype=query&opname=${opname}`, {
             method: 'POST',
             headers: {
@@ -57,16 +60,16 @@ async function searchRestaurants({ city, cityData, date, partySize, time }) {
             body: JSON.stringify({
               operationName: opname,
               variables,
-              extensions: { persistedQuery: { version: 1, sha256Hash: hash } },
+              query
             }),
           });
           try { return await res.json(); } catch { return null; }
         },
-        opname, variables, HASHES[opname], csrf
+        opname, variables, query, csrf
       );
 
     // 1) Resolve metroId
-    const ac = await gql('Autocomplete', { term: cityName, latitude: lat, longitude: lng, useNewVersion: true });
+    const ac = await gql('Autocomplete', { term: cityName, latitude: lat, longitude: lng }, QUERIES.Autocomplete);
     const acResults = ac?.data?.autocomplete?.autocompleteResults || [];
     const metroId = (acResults.find((r) => r.metroId) || {}).metroId || 0;
 
@@ -80,7 +83,7 @@ async function searchRestaurants({ city, cityData, date, partySize, time }) {
       requestContext: { pageType: 'home', platform: 'desktop' },
       tld: 'com', maxLists: 6, itemsPerList: 20, itemsPerListByModule: [],
       metroId, latitude: lat, longitude: lng,
-    });
+    }, QUERIES.HomeModuleLists);
 
     const collected = [];
     const walk = (o, depth = 0) => {
@@ -129,9 +132,11 @@ async function searchRestaurants({ city, cityData, date, partySize, time }) {
 
 function normalizeRestaurant(r, date, partySize, time, rawSlots) {
   const profile = r.urls?.profileLink?.link || '';
+  // OpenTable's restaurant page reads `dateTime` (camelCase) + `covers` to
+  // pre-fill the reservation widget; if ignored it still lands on the venue.
   const dt = `${date}T${time || '19:00'}`;
   const bookingUrl = profile
-    ? `${profile}?datetime=${encodeURIComponent(dt)}&covers=${partySize}`
+    ? `${profile}?covers=${partySize}&dateTime=${encodeURIComponent(dt)}`
     : 'https://www.opentable.com';
 
   const slots = (rawSlots || []).map((s) => {
@@ -139,7 +144,7 @@ function normalizeRestaurant(r, date, partySize, time, rawSlots) {
     return {
       time: t,
       url: profile
-        ? `${profile}?datetime=${encodeURIComponent(`${date}T${t}`)}&covers=${partySize}`
+        ? `${profile}?covers=${partySize}&dateTime=${encodeURIComponent(`${date}T${t}`)}`
         : bookingUrl,
     };
   }).filter((s) => s.time);
