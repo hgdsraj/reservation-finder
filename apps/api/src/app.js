@@ -8,6 +8,9 @@ const searchRouter = require('./routes/search');
 
 const app = express();
 
+// Trust Railway's load balancer proxy so express-rate-limit can identify client IPs correctly
+app.set('trust proxy', 1);
+
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' ? (process.env.FRONTEND_URL || true) : true,
