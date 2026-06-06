@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+// CSS is imported in main.jsx to avoid lazy-load timing issues
 import { PlatformBadge } from './PlatformBadge.jsx';
 import { StarRating } from './StarRating.jsx';
 import { ExternalLink } from 'lucide-react';

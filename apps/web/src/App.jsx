@@ -148,21 +148,25 @@ export default function App() {
           {/* Platform results summary */}
           {hasSearched && (
             <div className="flex flex-wrap gap-3 mt-4">
-              {ALL_PLATFORMS.map((p) => (
-                platformStatus[p] ? (
+              {ALL_PLATFORMS.map((p) => {
+                const s = platformStatus[p];
+                if (!s) return null;
+                return (
                   <div key={p} className="flex items-center gap-1.5">
                     <PlatformBadge platform={p} />
                     <span className={[
                       'text-[10px] font-medium tabular-nums',
-                      platformStatus[p] === 'loading'     ? 'text-peri-400/70 animate-pulse' :
-                      platformStatus[p] === 'done'        ? 'text-emerald-500/80' : 'text-slate-600',
+                      s === 'loading'     ? 'text-peri-400/70 animate-pulse' :
+                      s === 'done'        ? 'text-emerald-500/80' :
+                      s === 'unavailable' ? 'text-slate-600' : 'text-red-500/70',
                     ].join(' ')}>
-                      {platformStatus[p] === 'loading'     ? '···' :
-                       platformStatus[p] === 'done'        ? `${platformCounts[p] || 0}` : '—'}
+                      {s === 'loading'     ? '···' :
+                       s === 'done'        ? `${platformCounts[p] || 0}` :
+                       s === 'unavailable' ? 'blocked' : 'error'}
                     </span>
                   </div>
-                ) : null
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

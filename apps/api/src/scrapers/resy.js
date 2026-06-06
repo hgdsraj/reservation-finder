@@ -57,11 +57,12 @@ function normalizeVenue(v, date, partySize) {
 
   // The API returns url_slug (snake_case), NOT urlSlug
   const slug = venue?.url_slug;
-  // City slug comes from location.url_slug (e.g. "vancouver-bc", "new-york")
-  const citySlug = loc?.url_slug;
+  // location.code is the short city code Resy uses in URLs (e.g. "vanc", "nyc", "sf")
+  // location.url_slug ("vancouver-bc") does NOT match Resy's website URL format
+  const cityCode = loc?.code;
 
-  const bookingBase = citySlug && slug
-    ? `https://resy.com/cities/${citySlug}/${slug}`
+  const bookingBase = cityCode && slug
+    ? `https://resy.com/cities/${cityCode}/${slug}`
     : slug
     ? `https://resy.com/${slug}`
     : 'https://resy.com';
@@ -70,7 +71,11 @@ function normalizeVenue(v, date, partySize) {
     // date.start is "YYYY-MM-DD HH:MM:SS" — extract time portion
     const raw = s.date?.start || '';
     const time = raw.includes(' ') ? raw.split(' ')[1]?.slice(0, 5) : '';
-    const url = `${bookingBase}?date=${date}&seats=${partySize}`;
+    // Use slot token for direct booking deeplink when available
+    const token = s.config?.token;
+    const url = token
+      ? `https://resy.com/book/details?token=${encodeURIComponent(token)}&date=${date}&seats=${partySize}`
+      : `${bookingBase}?date=${date}&seats=${partySize}`;
     return { time, url };
   }).filter((s) => s.time);
 
