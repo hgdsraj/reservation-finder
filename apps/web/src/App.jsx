@@ -1,5 +1,26 @@
-import React, { useState, useMemo, useEffect, Suspense, lazy } from 'react';
-import { Utensils, Sun, Moon, List, Map } from 'lucide-react';
+import React, { useState, useMemo, useEffect, Suspense, lazy, Component } from 'react';
+import { Utensils, Sun, Moon, List, Map, ChevronLeft } from 'lucide-react';
+
+class MapErrorBoundary extends Component {
+  state = { error: null };
+  static getDerivedStateFromError(error) { return { error }; }
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="flex flex-col items-center justify-center h-96 rounded-2xl border border-card-border bg-card-bg gap-4">
+          <p className="text-slate-400 text-sm">Map failed to load</p>
+          <button
+            onClick={() => { this.setState({ error: null }); this.props.onFallback(); }}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-peri-500/20 text-peri-300 text-sm font-semibold hover:bg-peri-500/30 transition-colors"
+          >
+            <ChevronLeft size={14} /> Back to list
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 import { SearchBar } from './components/SearchBar.jsx';
 import { RestaurantCard } from './components/RestaurantCard.jsx';
 import { FilterPanel } from './components/FilterPanel.jsx';
@@ -225,9 +246,11 @@ export default function App() {
               </div>
 
               {viewMode === 'map' && filtered.length > 0 ? (
-                <Suspense fallback={<div className="h-96 bg-card-bg border border-card-border rounded-2xl animate-pulse" />}>
-                  <MapView restaurants={filtered} cityData={cityData} searchParams={searchParams} />
-                </Suspense>
+                <MapErrorBoundary onFallback={() => setViewMode('list')}>
+                  <Suspense fallback={<div className="h-96 bg-card-bg border border-card-border rounded-2xl animate-pulse" />}>
+                    <MapView restaurants={filtered} cityData={cityData} onClose={() => setViewMode('list')} />
+                  </Suspense>
+                </MapErrorBoundary>
               ) : loading && filtered.length === 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
                   {Array.from({ length: 9 }).map((_, i) => <SkeletonCard key={i} />)}

@@ -1,10 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 // CSS is imported in main.jsx to avoid lazy-load timing issues
-import { PlatformBadge } from './PlatformBadge.jsx';
-import { StarRating } from './StarRating.jsx';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, ChevronLeft } from 'lucide-react';
 
 // Fix Leaflet default marker icon (broken in bundlers)
 delete L.Icon.Default.prototype._getIconUrl;
@@ -52,7 +50,7 @@ function FitBounds({ markers, center }) {
   return null;
 }
 
-export function MapView({ restaurants, cityData, searchParams, onCardClick }) {
+export function MapView({ restaurants, cityData, onClose }) {
   const withCoords = useMemo(
     () => restaurants.filter((r) => r.lat && r.lng),
     [restaurants]
@@ -71,7 +69,15 @@ export function MapView({ restaurants, cityData, searchParams, onCardClick }) {
   }
 
   return (
-    <div className="isolate rounded-2xl overflow-hidden border border-card-border" style={{ height: '600px' }}>
+    <div className="relative isolate rounded-2xl overflow-hidden border border-card-border" style={{ height: '600px' }}>
+      {onClose && (
+        <button
+          onClick={onClose}
+          className="absolute top-3 left-3 z-[1000] flex items-center gap-1 px-3 py-1.5 rounded-full bg-white/90 text-gray-800 text-xs font-semibold shadow hover:bg-white transition-colors"
+        >
+          <ChevronLeft size={13} /> List
+        </button>
+      )}
       <MapContainer
         key={`${center.lat},${center.lng}`}
         center={[center.lat, center.lng]}
